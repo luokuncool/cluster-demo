@@ -1,0 +1,110 @@
+version: '3'
+services:
+  nginx-master:
+    image: nginx:latest
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./services/nginx/master/nginx.conf:/etc/nginx/conf.d/web.conf
+    ports:
+      - 8889:80
+    depends_on:
+      - nginx-slave1
+      - nginx-slave2
+    networks:
+      - cluster-demo
+  nginx-slave1:
+    image: nginx:latest
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./services/nginx/slave1/nginx.conf:/etc/nginx/conf.d/web.conf
+    depends_on:
+      - fpm1
+    networks:
+      - cluster-demo
+  nginx-slave2:
+    image: nginx:latest
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./services/nginx/slave2/nginx.conf:/etc/nginx/conf.d/web.conf
+    depends_on:
+      - fpm2
+    networks:
+      - cluster-demo
+  mysql-master:
+    build:
+      context: .
+      dockerfile: ./services/mysql/master/Dockerfile
+    volumes:
+      - ./services/mysql/master/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 33061:3306
+    networks:
+      - cluster-demo
+  mysql-slave1:
+    build:
+      context: .
+      dockerfile: ./services/mysql/slave1/Dockerfile
+    volumes:
+      - ./services/mysql/slave1/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - mysql-master
+    ports:
+      - 33062:3306
+    networks:
+      - cluster-demo
+  mysql-slave2:
+    build:
+      context: .
+      dockerfile: ./services/mysql/slave2/Dockerfile
+    volumes:
+      - ./services/mysql/slave2/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - mysql-master
+    ports:
+      - 33063:3306
+    networks:
+      - cluster-demo
+  fpm1:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql-master
+      - mysql-slave1
+      - mysql-slave2
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - cluster-demo
+  fpm2:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql-master
+      - mysql-slave1
+      - mysql-slave2
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - cluster-demo
+  redis:
+    image: redis:3.2-alpine
+    command: redis-server --appendonly yes --requirepass redis_password
+    volumes:
+      - redis:/data
+    networks:
+      - cluster-demo
+volumes:
+  redis:
+networks:
+  cluster-demo:
+    driver: bridge
