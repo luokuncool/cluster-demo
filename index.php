@@ -12,14 +12,16 @@ if ($_POST) {
     $writer = db(true);
     $title  = $writer->escape_string($_POST['title']);
     $body   = $writer->escape_string($_POST['body']);
-    $res    = $writer->query("insert into posts (title, body) value ('{$title}', '{$body}')");
+    if ($title && $body) {
+        $res = $writer->query("insert into posts (title, body) value ('{$title}', '{$body}')");
+    }
     header('refresh:0;url=/');
     return;
 }
 
 //读取从库
 $db     = db();
-$result = $db->query('select * from posts order by id desc limit 10');
+$result = $db->query('select * from posts order by id desc limit 6');
 $posts  = [];
 while ($row = $result->fetch_assoc()) {
     $posts[] = $row;
