@@ -1,32 +1,14 @@
 version: '3'
 services:
-  nginx-master:
+  nginx:
     image: nginx:latest
     volumes:
       - ./:/usr/share/nginx/html
-      - ./services/nginx/master/nginx.conf:/etc/nginx/conf.d/web.conf
+      - ./services/nginx/web.conf:/etc/nginx/conf.d/web.conf
     ports:
       - 8889:80
     depends_on:
-      - nginx-slave1
-      - nginx-slave2
-    networks:
-      - cluster-demo
-  nginx-slave1:
-    image: nginx:latest
-    volumes:
-      - ./:/usr/share/nginx/html
-      - ./services/nginx/slave1/nginx.conf:/etc/nginx/conf.d/web.conf
-    depends_on:
       - fpm1
-    networks:
-      - cluster-demo
-  nginx-slave2:
-    image: nginx:latest
-    volumes:
-      - ./:/usr/share/nginx/html
-      - ./services/nginx/slave2/nginx.conf:/etc/nginx/conf.d/web.conf
-    depends_on:
       - fpm2
     networks:
       - cluster-demo
