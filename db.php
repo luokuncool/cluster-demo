@@ -13,5 +13,6 @@ function db($master = false)
     }
 
     $db = new mysqli($host, 'root', 'root', 'demo');
+    $db->query('set names utf8');
     return $db;
 }

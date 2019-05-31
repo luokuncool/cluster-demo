@@ -18,6 +18,7 @@ services:
       dockerfile: ./services/mysql/master/Dockerfile
     volumes:
       - ./services/mysql/master/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./data/mysql-master:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
     ports:
@@ -30,6 +31,7 @@ services:
       dockerfile: ./services/mysql/slave1/Dockerfile
     volumes:
       - ./services/mysql/slave1/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./data/mysql-slave1:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
     depends_on:
@@ -44,6 +46,7 @@ services:
       dockerfile: ./services/mysql/slave2/Dockerfile
     volumes:
       - ./services/mysql/slave2/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./data/mysql-slave2:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
     depends_on:
@@ -82,11 +85,18 @@ services:
     image: redis:3.2-alpine
     command: redis-server --appendonly yes --requirepass redis_password
     volumes:
-      - redis:/data
+      - ./data/redis:/data
     networks:
       - cluster-demo
-volumes:
-  redis:
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    networks:
+      - cluster-demo
+    ports:
+      - 8886:80
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql-master
 networks:
   cluster-demo:
     driver: bridge
